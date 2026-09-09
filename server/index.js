@@ -8,9 +8,9 @@ import cors from 'cors'
 dotenv.config();
 
 const app = express();
-mongoose.connect(process.env.dbURL).then(()=>{
+mongoose.connect(process.env.dbURL).then(() => {
     console.log('DB Connected')
-}).catch((err)=>{
+}).catch((err) => {
     console.log(err);
 })
 
@@ -23,6 +23,6 @@ app.use(express.json())
 app.use('/users', userRouter)
 
 
-app.listen(8090,()=>{
+app.listen(8090, () => {
     console.log('Server Started at port 8090');
 })
