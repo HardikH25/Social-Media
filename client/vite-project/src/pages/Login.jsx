@@ -2,14 +2,16 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import axios from 'axios'
 import { axiosInstance } from '../axiosCalls/axios'
-
+import { useAuth } from '../context/AuthContext.jsx'
 
 function Login() {
+    const { setUser } = useAuth()
 
     const [form, setForm] = useState({
         email: '',
         password: ''
     })
+    const [error,setError] = useState(null)
 
     const handleChange = (e) => {
         setForm((prev) => ({
@@ -19,11 +21,23 @@ function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        // Frontend Validation
+        if (!form.email || !form.password) {
+            setError("Please fill in all fields")
+            return
+        }
+
         try {
-            await axiosInstance.post('/users/login', form) //payload - the form the data
+            const user = await axiosInstance.post('/users/login', form) //payload - the form the data
             console.log("User Logged In")
-        } catch (error) {
-            console.log(error)
+            setForm({
+                email: '',
+                password:''
+            })
+            setUser(user.data.userData) //set the user state to the user object, so that we can use it in the private pages
+        } catch (err) {
+            setError(err.response?.data?.message)
         }
     }
 
@@ -53,6 +67,13 @@ function Login() {
 
                     {/* Form */}
                     <form className="mt-8 space-y-4" onSubmit={(e) => e.preventDefault()}>
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center font-medium">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Email Address */}
                         <div>
                             <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
@@ -62,6 +83,7 @@ function Login() {
                                 type="email"
                                 name="email"
                                 onChange={handleChange}
+                                value={form.email}
                                 placeholder="alex@example.com"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
@@ -76,6 +98,7 @@ function Login() {
                                 type="password"
                                 name="password"
                                 onChange={handleChange}
+                                value={form.password}
                                 placeholder="Create a password"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
@@ -97,7 +120,7 @@ function Login() {
                     <div className="mt-6 text-center text-xs text-zinc-400">
                         New to the community?{' '}
                         <Link
-                            to="/login"
+                            to="/signup"
                             className="text-white font-medium hover:text-zinc-300 underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors"
                         >
                             Sign Up

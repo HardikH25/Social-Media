@@ -9,8 +9,7 @@ function Signup() {
         email: '',
         password: ''
     })
-
-    const { name, username, email, password } = form
+    const [error,setError] = useState(null)
 
     const handleChange = (e) => {
         setForm((prev) => ({
@@ -25,16 +24,15 @@ function Signup() {
             await axiosInstance.post('/users/register', form) // payload - form data
             //add validation checks
             console.log("User Registered")
-        } catch (error) {
-            console.log(error)
+            setForm({
+                name: '',
+                username: '',
+                email: '',
+                password: ''
+            })
+        } catch (err) {
+            setError(err.response?.data?.message)
         }
-
-        setForm({
-            name: '',
-            username: '',
-            email: '',
-            password: ''
-        })
     }
 
     return (
@@ -63,6 +61,13 @@ function Signup() {
 
                     {/* Form */}
                     <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center font-medium">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Full Name */}
                         <div>
                             <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
@@ -72,7 +77,7 @@ function Signup() {
                                 type="text"
                                 name="name"
                                 onChange={handleChange}
-                                value={name}
+                                value={form.name}
                                 placeholder="e.g. Alex Morgan"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
@@ -87,7 +92,7 @@ function Signup() {
                                 type="text"
                                 name="username"
                                 onChange={handleChange}
-                                value={username}
+                                value={form.username}
                                 placeholder="@ alexmorgan"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
@@ -102,7 +107,7 @@ function Signup() {
                                 type="email"
                                 name="email"
                                 onChange={handleChange}
-                                value={email}
+                                value={form.email}
                                 placeholder="alex@example.com"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
@@ -117,7 +122,7 @@ function Signup() {
                                 type="password"
                                 name="password"
                                 onChange={handleChange}
-                                value={password}
+                                value={form.password}
                                 placeholder="Create a password"
                                 className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
                             />
