@@ -6,7 +6,6 @@ import genToken from "../utils/generateToken.js"
 const cookiesOption = {
     httpOnly: true
 }
-
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password, username } = req.body
@@ -29,8 +28,8 @@ export const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        console.log(salt)
-        console.log(hashedPassword);
+        // console.log(salt)
+        // console.log(hashedPassword);
 
         const newUser = await User.create({
             name,
@@ -49,7 +48,6 @@ export const registerUser = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error", error: err })
     }
 }
-
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body
@@ -70,7 +68,6 @@ export const loginUser = async (req, res) => {
         res.cookie('token', token, cookiesOption)
 
         return res.status(200).json({ message: "Logged in successfully", userData: user })
-
     }
     catch (err) {
         return res.status(500).json({ message: "Internal Server Error", error: err })
@@ -79,4 +76,84 @@ export const loginUser = async (req, res) => {
 
 export const getUser = async (req, res) => {
     res.status(200).json({ message: "User Authenticated", userData: req.user })
+}
+
+export const getUserProfile = async (req, res) => {
+    try {
+        const { username } = req.params;
+        const userData = await User.findOne({ username }).select('-password') // or ('name username email')
+        res.status(200).json({ message: 'Profile Found', userProfileData: userData })
+
+        if (!userData) {
+            return res.status(404).json({ message: "User Not Found" })
+        }
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", error: error })
+    }
+}
+
+export const followUser = async (req, res) => {
+    try {
+        //check is the id is same as logged in user -> user can't follow themselves you dipshit
+        //check if you are already following the user -> unfollow , if not -> follow
+        //from taken fetch the current user id 
+        const currentUserId = req.user._id
+        const targetUserId = req.params.id
+        if (currentUserId.toString() === targetUserId.toString()) { //mongoose treats the id as objectId and cannot be comparable unless you do string matching
+            return res.status(409).json({ message: 'You cannot follow yourself dipshit' })
+        }
+        const targetUser = await User.findById(targetUserId) //or findOne({_id: targetuserid})
+        if (!targetUser) {
+            return res.status(404).json({ message: "No User Found" })
+        }
+        const alreadyFollowing = targetUser.followers.some((id) => //return boolean 
+            id.toString() === currentUserId.toString()
+        )
+        if (alreadyFollowing) {
+            return res.status(409).json({ message: 'You are already following' })
+        }
+        //if not - update (you can do push) - but mongodb has operator which we can use heavily.
+        await User.findByIdAndUpdate(currentUserId, {
+            $addToSet: { followings: targetUserId }
+        })
+        await User.findByIdAndUpdate(targetUserId, {
+            $addToSet: { followers : currentUserId }
+        })
+
+        res.send(200).json({message: 'User Followed'})
+
+    } catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", error: error})
+    }
+}
+export const unFollowUser = async (req, res) => {
+    try {
+        const currentUserId = req.user._id
+        const targetUserId = req.params.id
+        if (currentUserId.toString() === targetUserId.toString()) { //mongoose treats the id as objectId and cannot be comparable unless you do string matching
+            return res.status(409).json({ message: 'You cannot unfollow yourself dipshit' })
+        }
+        const targetUser = await User.findById(targetUserId) //or findOne({_id: targetuserid})
+        if (!targetUser) {
+            return res.status(404).json({ message: "No User Found" })
+        }
+        const amIFollowing = targetUser.followers.some((id) => //return boolean 
+            id.toString() === currentUserId.toString()
+        )
+        if (!amIFollowing) {
+            return res.status(409).json({ message: 'You are not following' })
+        }
+        await User.findByIdAndUpdate(currentUserId, {
+            $pull: { followings: targetUserId }
+        })
+        await User.findByIdAndUpdate(targetUserId, {
+            $pull: { followers : currentUserId }
+        })
+
+        res.send(200).json({message: 'User Unfollowed'})
+
+    } catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", error: error})
+    }
 }

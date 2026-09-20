@@ -1,131 +1,111 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import axios from 'axios'
-import { axiosInstance } from '../axiosCalls/axios'
-import { useAuth } from '../context/AuthContext.jsx'
+import { axiosInstance } from '../axiosCalls/axios';
+import { useAuth } from '../context/AuthContext.jsx';
+
 
 function Login() {
-    const { setUser } = useAuth()
-
+    const { setUser } = useAuth();
+    const [isLoading, setIsLoading] = useState(false)
     const [form, setForm] = useState({
         email: '',
         password: ''
     })
-    const [error,setError] = useState(null)
-
+    const [error, setError] = useState('');
     const handleChange = (e) => {
         setForm((prev) => ({
-            ...prev, [e.target.name]: e.target.value //key value pair
+            ...prev, [e.target.name]: e.target.value
         }))
     }
-
     const handleSubmit = async (e) => {
-        e.preventDefault()
-
-        // Frontend Validation
-        if (!form.email || !form.password) {
-            setError("Please fill in all fields")
-            return
-        }
-
+        e.preventDefault();
+        setIsLoading(true)
         try {
-            const user = await axiosInstance.post('/users/login', form) //payload - the form the data
-            console.log("User Logged In")
+            const res = await axiosInstance.post('/users/login', form)
+            setUser(res.data.userData);
             setForm({
                 email: '',
-                password:''
+                password: ''
             })
-            setUser(user.data.userData) //set the user state to the user object, so that we can use it in the private pages
-        } catch (err) {
-            setError(err.response?.data?.message)
+            console.log('User Logged In')
+            setError('');
+        }
+        catch (err) {
+            setError(err.response.data.message)
+        }
+        finally{
+            setIsLoading(false)
         }
     }
-
     return (
-        <div className="relative min-h-screen w-full bg-[#050507] text-zinc-100 flex items-center justify-center px-4 py-12 selection:bg-zinc-800 selection:text-white overflow-hidden">
-            {/* Ambient background glow */}
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[350px] bg-zinc-700/10 blur-[130px] pointer-events-none rounded-full" />
-            <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+        <div className="min-h-screen bg-background texture-noise flex items-center justify-center p-6">
+            <div className="w-full max-w-md bg-card p-10 border border-border">
+                
+                <div className="mb-12">
+                    <h1 className="text-4xl font-playfair tracking-tight text-foreground mb-2">
+                        Log In
+                    </h1>
+                    <p className="text-sm font-mono text-mutedForeground tracking-widest uppercase">
+                        Authenticate session
+                    </p>
+                </div>
 
-            {/* Card Container */}
-            <div className="relative w-full max-w-[420px]">
-                <div className="relative rounded-3xl bg-zinc-950/85 border border-zinc-800/80 shadow-[0_0_50px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl p-8 sm:p-10 before:absolute before:inset-x-0 before:top-0 before:h-px before:rounded-t-3xl before:bg-gradient-to-r before:from-transparent before:via-zinc-500/25 before:to-transparent">
-
-                    {/* Top Logo / Icon */}
-                    <div className="flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700/70 flex items-center justify-center shadow-lg shadow-black/60 mb-4">
-                            <span className="text-sm font-extrabold tracking-tight text-white">sst</span>
+                <form className="space-y-8" onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="p-4 bg-foreground text-background text-sm font-mono tracking-wide">
+                            {error}
                         </div>
+                    )}
 
-                        <h1 className="text-2xl font-bold tracking-tight text-white">
-                            Join sst social
-                        </h1>
-                        <p className="mt-1 text-xs text-zinc-400">
-                            Connect seamlessly. Share effortlessly.
-                        </p>
+                    <div className="space-y-2">
+                        <label className="block text-xs font-mono uppercase tracking-widest text-foreground">
+                            Email Address
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            onChange={handleChange}
+                            value={form.email}
+                            placeholder="email@example.com"
+                            className="w-full bg-transparent border-b-2 border-border text-foreground placeholder:text-mutedForeground placeholder:italic py-3 text-lg transition-all duration-100 outline-none focus:border-b-[4px] focus:outline-none focus-visible:outline-none rounded-none"
+                        />
                     </div>
 
-                    {/* Form */}
-                    <form className="mt-8 space-y-4" onSubmit={(e) => e.preventDefault()}>
-                        {/* Error Message */}
-                        {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center font-medium">
-                                {error}
-                            </div>
-                        )}
+                    <div className="space-y-2">
+                        <label className="block text-xs font-mono uppercase tracking-widest text-foreground">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            onChange={handleChange}
+                            value={form.password}
+                            placeholder="Enter password"
+                            className="w-full bg-transparent border-b-2 border-border text-foreground placeholder:text-mutedForeground placeholder:italic py-3 text-lg transition-all duration-100 outline-none focus:border-b-[4px] focus:outline-none focus-visible:outline-none rounded-none"
+                        />
+                    </div>
 
-                        {/* Email Address */}
-                        <div>
-                            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                onChange={handleChange}
-                                value={form.email}
-                                placeholder="alex@example.com"
-                                className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
-                            />
-                        </div>
+                    <div className="pt-8">
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-4 bg-foreground text-background font-mono uppercase tracking-widest text-sm hover:bg-background hover:text-foreground border-2 border-foreground transition-none focus-visible:outline focus-visible:outline-3 focus-visible:outline-foreground focus-visible:outline-offset-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? "Authenticating..." : "Submit"}
+                        </button>
+                    </div>
+                </form>
 
-                        {/* Password */}
-                        <div>
-                            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                onChange={handleChange}
-                                value={form.password}
-                                placeholder="Create a password"
-                                className="w-full bg-zinc-900/60 hover:bg-zinc-900/80 border border-zinc-800 focus:border-zinc-500 focus:bg-zinc-900 text-zinc-100 placeholder-zinc-600 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none focus:ring-1 focus:ring-zinc-600"
-                            />
-                        </div>
-
-                        {/* Login Button */}
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                onClick={handleSubmit}
-                                className="w-full py-3 px-4 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_-3px_rgba(255,255,255,0.25)] hover:shadow-[0_0_25px_-2px_rgba(255,255,255,0.4)] active:scale-[0.99] cursor-pointer"
-                            >
-                                Login
-                            </button>
-                        </div>
-                    </form>
-
-                    {/* Footer Link to Login */}
-                    <div className="mt-6 text-center text-xs text-zinc-400">
-                        New to the community?{' '}
+                <div className="mt-12 pt-8 border-t border-borderLight text-center">
+                    <p className="text-xs font-mono text-mutedForeground tracking-wide uppercase">
+                        New user?{' '}
                         <Link
                             to="/signup"
-                            className="text-white font-medium hover:text-zinc-300 underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors"
+                            className="text-foreground hover:underline underline-offset-4 decoration-1 focus-visible:outline-none focus-visible:border-b-2 focus-visible:border-foreground"
                         >
-                            Sign Up
+                            Create an account
                         </Link>
-                    </div>
+                    </p>
                 </div>
             </div>
         </div>

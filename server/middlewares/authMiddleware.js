@@ -14,7 +14,6 @@ export const isAuthenticated = async (req, res, next) => { // a custom middlewar
         if (!user) {
             return res.status(404).json({ message: "User Not Found" });
         } 
-        
         req.user = user;
         next();
     } catch (error) {

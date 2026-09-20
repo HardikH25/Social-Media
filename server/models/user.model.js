@@ -5,13 +5,13 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    username:{
+    username: {
         type: String,
-        required : true,
-        unique : true
+        required: true,
+        unique: true
     },
     email: {
-        type:String,
+        type: String,
         required: true,
         unique: true
     },
@@ -19,15 +19,21 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    profileImage : {
+    profileImage: {
         type: String
     },
-    followers : [],
-    followings : [],
+    followers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    followings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
     posts: [],
-    stories:[],
-    reels:[]
-}, {timestamps: true})
+    stories: [],
+    reels: []
+}, { timestamps: true })
 
 
 const User = mongoose.model('User', userSchema)
