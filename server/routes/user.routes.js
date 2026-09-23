@@ -1,5 +1,5 @@
 import express from 'express'
-import { getUser, loginUser, registerUser, getUserProfile, followUser } from '../controllers/user.controllers.js'
+import { getUser, loginUser, registerUser, getUserProfile, followUser,unFollowUser } from '../controllers/user.controllers.js'
 import { isAuthenticated } from '../middlewares/authMiddleware.js';
 
 const userRouter = express.Router()
@@ -13,6 +13,7 @@ userRouter.get('/profile/:username',isAuthenticated,getUserProfile) //isAuthenti
 //only letting logged in users to access the profile page
 
 //followings and followers
-userRouter.post('/:id/follow', isAuthenticated, followUser)
+userRouter.post('/follow/:id', isAuthenticated, followUser)
+userRouter.post('/unfollow/:id', isAuthenticated, unFollowUser)
 
 export default userRouter

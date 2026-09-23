@@ -22,10 +22,10 @@ function Signup() {
             await axiosInstance.post('/users/register', form)
             console.log('User Created');
             setForm({
-                name:'',
-                username:'',
-                email:'',
-                password:''
+                name: '',
+                username: '',
+                email: '',
+                password: ''
             })
             setError('');
             navigate('/login');
@@ -37,7 +37,7 @@ function Signup() {
     return (
         <div className="min-h-screen bg-background texture-noise flex items-center justify-center p-6">
             <div className="w-full max-w-md bg-card p-10 border border-border mt-6">
-                
+
                 <div className="mb-12">
                     <h1 className="text-4xl font-playfair tracking-tight text-foreground mb-2">
                         Register

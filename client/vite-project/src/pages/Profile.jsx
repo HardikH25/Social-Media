@@ -6,23 +6,36 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const Profile = () => {
     const [currentUser, setCurrentUser] = useState(null);
-    const { username} = useParams(); //get the dynamic routing parameter 
-    const {user} = useAuth();
+    const { username } = useParams(); //get the dynamic routing parameter 
+    const { user } = useAuth();
+
+    const [isFollowing, setIsFollowing] = useState(false)
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         const fetchProfile = async () => {
             try {
+                setLoading(true);
+                setError(null);
                 const userProfile = await axiosInstance.get(`/users/profile/${username}`)
-                setCurrentUser(userProfile.data.userProfileData)
-                console.log(userProfile.data.userProfileData)
+                const profileData = userProfile.data.userProfileData;
+                setCurrentUser(profileData)
+                console.log(profileData)
+                console.log(user._id)
+                setIsFollowing(profileData.followers.some((id) => id.toString() === user._id.toString()));
             }
             catch (error) {
                 console.log(error)
+                setError(error.response?.data?.message || 'Something went wrong');
+            } finally {
+                setLoading(false);
             }
         }
         fetchProfile();
     }, [username])
 
-    if (!currentUser) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-background texture-noise flex items-center justify-center p-6">
                 <div className="p-8 border border-border animate-pulse">
@@ -31,10 +44,35 @@ const Profile = () => {
             </div>
         );
     }
-    const handleFollow = async()=>{
+
+    if (error || !currentUser) {
+        return (
+            <div className="min-h-screen bg-background texture-noise flex items-center justify-center p-6">
+                <div className="p-8 border border-border bg-card">
+                    <h2 className="text-3xl font-playfair text-foreground mb-2">
+                        {error ? "Error" : "User Not Found"}
+                    </h2>
+                    <p className="font-mono text-xs uppercase tracking-widest text-mutedForeground">
+                        {error || "The profile you are looking for does not exist."}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+    const handleFollow = async () => {
         try {
-            await axiosInstance.post(`/users/profile/${id}/follow`)
+            await axiosInstance.post(`/users/follow/${currentUser._id}`)
             console.log('User Followed')
+            setIsFollowing(true)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    const handleUnfollow = async () => {
+        try {
+            await axiosInstance.post(`/users/unfollow/${currentUser._id}`)
+            console.log('User Unfollowed')
+            setIsFollowing(false)
         } catch (error) {
             console.log(error)
         }
@@ -63,16 +101,27 @@ const Profile = () => {
                                 </div>
                                 <div className="shrink-0 mt-2 md:mt-0">
                                     {user?._id?.toString() === currentUser?._id?.toString() ? (
-                                        <button className="group relative px-8 py-3 border border-foreground bg-background text-foreground overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 hover:shadow-md"
-                                        onClick={handleFollow}
-                                        >
+                                        <button className="group relative px-8 py-3 border border-foreground bg-background text-foreground overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 hover:shadow-md">
                                             <div className="absolute inset-0 w-0 bg-foreground transition-all duration-300 ease-out group-hover:w-full"></div>
                                             <span className="relative font-mono text-xs uppercase tracking-widest group-hover:text-background transition-colors duration-300">
                                                 Edit Profile
                                             </span>
                                         </button>
+                                    ) : isFollowing ? (
+                                        <button
+                                            className="group relative px-8 py-3 border border-foreground bg-foreground text-background overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 hover:shadow-md"
+                                            onClick={handleUnfollow}
+                                        >
+                                            <div className="absolute inset-0 w-full bg-foreground transition-all duration-300 ease-out group-hover:w-0"></div>
+                                            <span className="relative font-mono text-xs uppercase tracking-widest group-hover:text-foreground transition-colors duration-300 z-10">
+                                                Unfollow
+                                            </span>
+                                        </button>
                                     ) : (
-                                        <button className="group relative px-8 py-3 border border-foreground bg-foreground text-background overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 hover:shadow-md">
+                                        <button
+                                            className="group relative px-8 py-3 border border-foreground bg-foreground text-background overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 hover:shadow-md"
+                                            onClick={handleFollow}
+                                        >
                                             <div className="absolute inset-0 w-full bg-foreground transition-all duration-300 ease-out group-hover:w-0"></div>
                                             <span className="relative font-mono text-xs uppercase tracking-widest group-hover:text-foreground transition-colors duration-300 z-10">
                                                 Follow

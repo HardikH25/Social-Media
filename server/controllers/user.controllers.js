@@ -82,11 +82,10 @@ export const getUserProfile = async (req, res) => {
     try {
         const { username } = req.params;
         const userData = await User.findOne({ username }).select('-password') // or ('name username email')
-        res.status(200).json({ message: 'Profile Found', userProfileData: userData })
-
         if (!userData) {
             return res.status(404).json({ message: "User Not Found" })
         }
+        res.status(200).json({ message: 'Profile Found', userProfileData: userData })
     }
     catch (error) {
         return res.status(500).json({ message: "Internal Server Error", error: error })
@@ -121,7 +120,7 @@ export const followUser = async (req, res) => {
             $addToSet: { followers : currentUserId }
         })
 
-        res.send(200).json({message: 'User Followed'})
+        res.status(200).json({message: 'User Followed'})
 
     } catch (error) {
         return res.status(500).json({ message: "Internal Server Error", error: error})
@@ -151,7 +150,7 @@ export const unFollowUser = async (req, res) => {
             $pull: { followers : currentUserId }
         })
 
-        res.send(200).json({message: 'User Unfollowed'})
+        res.status(200).json({message: 'User Unfollowed'})
 
     } catch (error) {
         return res.status(500).json({ message: "Internal Server Error", error: error})
